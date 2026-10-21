@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respostas do Formulário</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #1a73e8;
+            margin-bottom: 20px;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #1a73e8;
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .loading {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Lista de Respostas</h2>
+        <div id="tabela" class="loading">Carregando dados da planilha...</div>
+    </div>
+
+    <script>
+        // Link CSV gerado automaticamente a partir da sua planilha do Google Forms
+        const urlCSV = 'https://docs.google.com/spreadsheets/d/1lFFqT0Sm05D0Ws-HwQH-20mxcqEj57Q94YGyP47bgHc/export?format=csv';
+
+        fetch(urlCSV)
+            .then(response => {
+                if (!response.ok) throw new Error('Erro ao carregar os dados.');
+                return response.text();
+            })
+            .then(data => {
+                const linhas = data.split('\n');
+                let html = '<div class="table-responsive"><table>';
+                
+                linhas.forEach((linha, index) => {
+                    if (linha.trim() === '') return;
+                    
+                    // Regex para lidar corretamente com vírgulas dentro de textos das respostas do Forms
+                    const colunas = linha.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                    
+                    html += '<tr>';
+                    colunas.forEach(coluna => {
+                        // Limpa as aspas que o CSV do Google costuma colocar em volta dos textos
+                        let textoLimpo = coluna.replace(/^"|"$/g, '').trim();
+                        let tag = index === 0 ? 'th' : 'td';
+                        html += `<${tag}>${textoLimpo}</${tag}>`;
+                    });
+                    html += '</tr>';
+                });
+                
+                html += '</table></div>';
+                document.getElementById('tabela').innerHTML = html;
+            })
+            .catch(error => {
+                document.getElementById('tabela').innerHTML = 'Não foi possível carregar as respostas. Verifique se a planilha está publicada na web.';
+                console.error(error);
+            });
+    </script>
+
+</body>
+</html>
